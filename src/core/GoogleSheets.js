@@ -8,7 +8,7 @@ export class GoogleSheetsAPI {
             return Promise.resolve();
         }
 
-        return fetch('/credentials.json')
+        return fetch('credentials.json')
             .then(response => response.json())
             .then(credentials => {
                 this.table_api_key = credentials.table_api_key;
@@ -29,35 +29,14 @@ export class GoogleSheetsAPI {
             for (let index = 0; index < headers.length; index++) {
                 const header = headers[index];
                 if (header === "photos") {
-                    obj[header] = row[index] ? row[index].split('\n') : [];
+                    const photos = row[index] ? row[index].split('\n') : [];
+                    obj[header] = photos.map(p => `https://lh3.googleusercontent.com/d/${this.extractFileId(p)}`)
                 } else {
                     obj[header] = row[index] || '';
                 }
             }
             return obj;
         }));
-    }
-
-    static fetchImageFromDrive(driveUrl) {
-        const fileId = this.extractFileId(driveUrl);
-        if (!fileId) {
-            console.error('Invalid Google Drive URL:', driveUrl);
-            return Promise.resolve('');  // Возвращаем пустую строку, если URL недействителен
-        }
-
-        const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${this.drive_api_key}`;
-
-        return fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch image from Google Drive: ${response.statusText}`);
-                }
-                return response.url; // Возвращаем прямую ссылку на изображение
-            })
-            .catch(error => {
-                console.error('Error fetching image:', error);
-                return '';  // Возвращаем пустую строку в случае ошибки
-            });
     }
 
     static extractFileId(driveUrl) {
